@@ -1,0 +1,55 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    
+    <title>example 5</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.js"></script>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://wzrd.in/standalone/expect@latest"></script>
+    <script src="https://wzrd.in/standalone/deep-freeze@latest"></script>
+    
+    <meta name="description" content="example 5">
+    <meta name="author" content="SitePoint">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+        // Avoiding object mutations in redux
+
+        const toggleTodo = (todo) => {
+            const newTodo = Object.assign({}, todo, {
+                completed: !todo.completed
+            });
+            return newTodo;
+        };
+
+        const testToggleTogo = () => {
+            const todoBefore = {
+                id: 0,
+                text: 'Learn Redux',
+                completed: false
+            };
+            const todoAfter = {
+                id: 0,
+                text: 'Learn Redux',
+                completed: true
+            };
+            deepFreeze(todoBefore);
+            expect(toggleTodo(todoBefore)).toEqual(todoAfter);
+        };
+        
+        testToggleTogo();
+        console.log("all tests passed.");
+        
+    </script>
+</body>
+</html>
