@@ -1,0 +1,90 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    
+    <title>example 4</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.js"></script>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <!-- NEW: libraries for testing code -->
+    <script src="https://wzrd.in/standalone/expect@latest"></script>
+    <script src="https://wzrd.in/standalone/deep-freeze@latest"></script>
+    
+    <meta name="description" content="example 4">
+    <meta name="author" content="SitePoint">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+        // Writing tests for code
+
+        // implementation functions
+        const addCounter = (list) => {
+            // don't mutate the original list (.concat creates a new array)
+            const newList = list.concat([0]);
+            return newList;
+        };
+        const removeCounter = (list, index) => {
+            // don't mutate the original list (use slices to grab the parts)
+            const newList = list
+                .slice(0, index)
+                .concat(list.slice(index + 1));
+            return newList;
+        };
+        const incrementCounter = (list, index) => {
+            // don't mutate the original list 
+            // (use slices to grab the parts and modify the desired index)
+            const newList = [
+                ...list.slice(0, index),
+                list[index] + 1,
+                ...list.slice(index + 1)
+            ];
+            return newList;
+        };
+
+        // test functions
+        const testAddCounter = () => {
+            const listBefore = [];
+            const listAfter = [0];
+            // do not let original array to be mutated
+            deepFreeze(listBefore);
+            expect(
+                addCounter(listBefore)
+            ).toEqual(listAfter);
+        };
+        const testRemoveCounter = () => {
+            const listBefore = [0, 10, 20];
+            const listAfter = [0, 20];
+            // do not let original array to be mutated
+            deepFreeze(listBefore);
+            expect(
+                removeCounter(listBefore, 1)
+            ).toEqual(listAfter);
+        };
+        const testIncrementCounter = () => {
+            const listBefore = [0, 10, 20];
+            const listAfter = [0, 11, 20];
+            // do not let original array to be mutated
+            deepFreeze(listBefore);
+            expect(
+                incrementCounter(listBefore, 1)
+            ).toEqual(listAfter);
+        };
+
+        // run tests
+        testAddCounter();
+        testRemoveCounter();
+        testIncrementCounter();
+        console.log("all tests passed.");
+        
+    </script>
+</body>
+</html>
