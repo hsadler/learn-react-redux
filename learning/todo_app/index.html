@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8">
     
-    <title>example 6</title>
+    <title>todo app</title>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.js"></script>
     <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
@@ -13,7 +13,7 @@
     <script src="https://wzrd.in/standalone/expect@latest"></script>
     <script src="https://wzrd.in/standalone/deep-freeze@latest"></script>
     
-    <meta name="description" content="example 6">
+    <meta name="description" content="todo app">
     <meta name="author" content="hsadler">
 
     <link rel="stylesheet" href="styles.css">
@@ -23,36 +23,58 @@
     <div id="root"></div>
     <script type="text/babel">
 
-        // Implementing a reducer
+        // Todo App
 
-        // reducer
+        /////// REDUCERS ///////
+
+        // single todo sub-reducer of the todos reducer
+        const todo = (state, action) => {
+            if(action.type === 'ADD_TODO') {
+                return {
+                    id: action.id,
+                    text: action.text,
+                    completed: false
+                }
+            } else if(action.type === 'TOGGLE_TODO') {
+                if(state.id === action.id) {
+                    return {
+                        ...state,
+                        completed: !state.completed
+                    };
+                } else {
+                    return state;
+                }
+            } else {
+                return state;
+            }
+        };
+        // top-level todos reducer
         const todos = (state = [], action) => {
             if(action.type === 'ADD_TODO') {
-                let newState = [
+                const newState = [
                     ...state,
-                    {
-                        id: action.id,
-                        text: action.text,
-                        completed: false
-                    }
-                ]
+                    todo(undefined, action)
+                ];
                 return newState;
             } else if(action.type === 'TOGGLE_TODO') {
-                let newState = [];
-                state.forEach(todo => {
-                    if(action.id === todo.id) {
-                        newState.push(Object.assign({}, todo, {
-                            completed: !todo.completed
-                        }));
-                    } else {
-                        newState.push(todo);
-                    }
+                const newState = state.map(item => {
+                    return todo(item, action);
                 });
                 return newState;
             } else {
                 return state;
             }
         };
+        // top-level visibilityFilter reducer
+        const visibilityFilter = (state="SHOW_ALL", action) => {
+            if(action.type === 'SET_VISIBILITY_FILTER') {
+                return action.filter;
+            } else {
+                return state;
+            }
+        };
+
+        /////// TESTS ///////
 
         // test functions
         const testAddTodo = () => {
@@ -106,11 +128,23 @@
             deepFreeze(action);
             expect(todos(stateBefore, action)).toEqual(stateAfter);
         };
-        
         // run tests
         testAddTodo();
         testToggleTodo();
         console.log("all tests passed.");
+        
+        /////// APP SETUP ///////
+
+        // combine the top-level reducers and create the todoApp function
+        const { combineReducers } = Redux;
+        const todoApp = combineReducers({
+            todos,
+            visibilityFilter
+        });
+
+        // create the store from the todoApp function
+        const { createStore } = Redux;
+        const store = createStore(todoApp);
         
     </script>
 </body>
