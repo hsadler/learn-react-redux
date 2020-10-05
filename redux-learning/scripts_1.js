@@ -1,4 +1,7 @@
 
+// Simple example of reducer implementation, redux store creation, 
+// subscription to store, and dispatch call to store
+
 const counter = (state=0, action) => {
     if(action.type === 'INCREMENT') {
         return state + 1;
@@ -12,8 +15,13 @@ const counter = (state=0, action) => {
 const { createStore } = Redux;
 const store = createStore(counter);
 
-store.subscribe(() => {
+const render = () => {
     document.body.innerText = store.getState();
+};
+
+render();
+store.subscribe(() => {
+    render();
 });
 
 document.addEventListener('click', () => {
