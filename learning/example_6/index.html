@@ -1,0 +1,116 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    
+    <title>example 6</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.js"></script>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://wzrd.in/standalone/expect@latest"></script>
+    <script src="https://wzrd.in/standalone/deep-freeze@latest"></script>
+    
+    <meta name="description" content="example 6">
+    <meta name="author" content="SitePoint">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+        // Implementing a reducer
+
+        // reducer
+        const todos = (state = [], action) => {
+            if(action.type === 'ADD_TODO') {
+                let newState = [
+                    ...state,
+                    {
+                        id: action.id,
+                        text: action.text,
+                        completed: false
+                    }
+                ]
+                return newState;
+            } else if(action.type === 'TOGGLE_TODO') {
+                let newState = [];
+                state.forEach(todo => {
+                    if(action.id === todo.id) {
+                        newState.push(Object.assign({}, todo, {
+                            completed: !todo.completed
+                        }));
+                    } else {
+                        newState.push(todo);
+                    }
+                });
+                return newState;
+            } else {
+                return state;
+            }
+        };
+
+        // test functions
+        const testAddTodo = () => {
+            const stateBefore = [];
+            const action = {
+                type: "ADD_TODO",
+                id: 0,
+                text: 'learn redux'
+            };
+            const stateAfter = [
+                {
+                    id: 0,
+                    text: 'learn redux',
+                    completed: false
+                }
+            ];
+            deepFreeze(stateBefore);
+            deepFreeze(action);
+            expect(todos(stateBefore, action)).toEqual(stateAfter);
+        };
+        const testToggleTodo = () => {
+            const stateBefore = [
+                {
+                    id: 0,
+                    text: "Learn Redux",
+                    completed: false
+                },
+                {
+                    id: 1,
+                    text: "Go Shopping",
+                    completed: false
+                }
+            ];
+            const action = {
+                type: 'TOGGLE_TODO',
+                id: 1
+            };
+            const stateAfter = [
+                {
+                    id: 0,
+                    text: "Learn Redux",
+                    completed: false
+                },
+                {
+                    id: 1,
+                    text: "Go Shopping",
+                    completed: true
+                }
+            ];
+            deepFreeze(stateBefore);
+            deepFreeze(action);
+            expect(todos(stateBefore, action)).toEqual(stateAfter);
+        };
+        
+        testAddTodo();
+        testToggleTodo();
+        console.log("all tests passed.");
+        
+    </script>
+</body>
+</html>
