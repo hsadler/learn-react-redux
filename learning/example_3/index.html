@@ -1,0 +1,77 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>example 3</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.js"></script>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <!-- NEW: way to get react jsx working without a compile/bundle step -->
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <meta name="description" content="example 3">
+    <meta name="author" content="SitePoint">
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+        // The react examples will now be written in the html 
+        // in order to avoid compiling/bundling complications
+
+        const counter = (state=0, action) => {
+            if(action.type === 'INCREMENT') {
+                return state + 1;
+            } else if(action.type === 'DECREMENT') {
+                return state - 1;
+            } else {
+                return state;
+            }
+        }
+
+        // NEW: react component definition
+        const Counter = ({ 
+            value,
+            onIncrement,
+            onDecrement
+        }) => {
+            return <div>
+                <h1>{value}</h1>
+                <button onClick={onIncrement}>+</button>
+                <button onClick={onDecrement}>-</button>
+            </div>
+        };
+
+        const { createStore } = Redux;
+        const store = createStore(counter);
+
+        // NEW: rendering to the dom with react
+        const render = () => {
+            ReactDOM.render(
+                <Counter 
+                    value={store.getState()} 
+                    onIncrement={
+                        () => {
+                            store.dispatch({ type: 'INCREMENT' })
+                        }
+                    }
+                    onDecrement={
+                        () => {
+                            store.dispatch({ type: 'DECREMENT' })
+                        }
+                    }
+                />,
+                document.getElementById("root")
+            );
+        };
+
+        render();
+        store.subscribe(() => {
+            render();
+        });
+        
+    </script>
+</body>
+</html>
