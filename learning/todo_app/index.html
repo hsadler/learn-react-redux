@@ -145,6 +145,44 @@
         // create the store from the todoApp function
         const { createStore } = Redux;
         const store = createStore(todoApp);
+
+        // create top-level todo-app react component
+        const { Component } = React;
+        let nextTodoId = 0;
+        const addTodoClickHandler = () => {
+            store.dispatch({
+                type: 'ADD_TODO',
+                text: 'Test', 
+                id: nextTodoId++
+            });
+        };
+        class TodoApp extends Component {
+            render() {
+                return (
+                    <div>
+                        <button onClick={addTodoClickHandler}>add todo</button>
+                        <ul>
+                            {this.props.todos.map(todo => {
+                                return <li key={todo.id}>{todo.text}</li>
+                            })}
+                        </ul>
+                    </div>
+                );
+            }
+        }
+        
+        // connect the todo-app component to the DOM
+        const render = () => {
+            ReactDOM.render(
+                <TodoApp todos={store.getState().todos}/>,
+                document.getElementById('root')
+            );
+        };
+
+        // subscribe the render callback on the redux store
+        store.subscribe(render);
+        // call init render
+        render();
         
     </script>
 </body>
