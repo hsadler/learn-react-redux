@@ -146,6 +146,33 @@
         const { createStore } = Redux;
         const store = createStore(todoApp);
 
+        // child component definitions
+        const filterLinkClickHandler = (event, filter) => {
+            event.preventDefault();
+            store.dispatch({
+                type: 'SET_VISIBILITY_FILTER',
+                filter: filter
+            });
+        };
+        const FilterLink = (props) => {
+            // NEW: accessing properties passed to a child component
+            // NEW: can return whatever we want here per conditions
+            if(props.currentFilter === props.filter) {
+                return (
+                    <span>{props.children}</span>
+                );
+            }
+            return (
+                <a 
+                    href='#'
+                    onClick={e => { filterLinkClickHandler(e, props.filter) }}
+                >
+                    {/*NEW: props.children is the way to access inner html of component*/}
+                    {props.children}
+                </a>
+            );
+        };
+
         // create top-level todo-app react component
         const { Component } = React;
         let nextTodoId = 0;
@@ -163,24 +190,44 @@
                 id: todo.id
             });
         };
+        const getVisibleTodos = (todos, filter) => {
+            if(filter === 'SHOW_ALL') {
+                return todos;
+            } else if(filter === 'SHOW_ACTIVE') {
+                return todos.filter(t => { return !t.completed });
+            } else if(filter === 'SHOW_COMPLETED') {
+                return todos.filter(t => { return t.completed });
+            }
+        };
         class TodoApp extends Component {
             render() {
+                const {
+                    todos,
+                    visibilityFilter
+                } = this.props;
+                const visibleTodos = getVisibleTodos(
+                    todos,
+                    visibilityFilter
+                );
                 return (
                     <div>
                         <input ref={
                             node => {this.input = node}
                         }/>
+                        {/*NEW: how pass args to handlers via anonymous callback*/}
                         <button onClick={
                             () => { addTodoClickHandler(this.input) }
                         }>add todo</button>
                         <ul>
-                            {this.props.todos.map(todo => {
+                            {/*NEW: rendering lists*/}
+                            {visibleTodos.map(todo => {
                                 return (
                                     <li 
                                         key={todo.id}
                                         onClick={
                                             () => { toggleTodoClickHandler(todo) }
                                         }
+                                        // NEW: conditional styling
                                         style={{
                                             textDecoration: todo.completed ? 'line-through' : 'none'
                                         }}
@@ -188,6 +235,15 @@
                                 );
                             })}
                         </ul>
+                        <p>
+                            Show:
+                            {' '}
+                            <FilterLink filter='SHOW_ALL' currentFilter={visibilityFilter}>All</FilterLink>
+                            {' '}
+                            <FilterLink filter='SHOW_ACTIVE' currentFilter={visibilityFilter}>Active</FilterLink>
+                            {' '}
+                            <FilterLink filter='SHOW_COMPLETED' currentFilter={visibilityFilter}>Completed</FilterLink>
+                        </p>
                     </div>
                 );
             }
@@ -196,7 +252,10 @@
         // connect the todo-app component to the DOM
         const render = () => {
             ReactDOM.render(
-                <TodoApp todos={store.getState().todos}/>,
+                <TodoApp 
+                    todos={store.getState().todos}
+                    visibilityFilter={store.getState().visibilityFilter}
+                />,
                 document.getElementById('root')
             );
         };
