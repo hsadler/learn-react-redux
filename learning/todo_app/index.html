@@ -149,18 +149,24 @@
         // create top-level todo-app react component
         const { Component } = React;
         let nextTodoId = 0;
-        const addTodoClickHandler = () => {
+        const addTodoClickHandler = (input) => {
             store.dispatch({
                 type: 'ADD_TODO',
-                text: 'Test', 
+                text: input.value, 
                 id: nextTodoId++
             });
+            input.value = '';
         };
         class TodoApp extends Component {
             render() {
                 return (
                     <div>
-                        <button onClick={addTodoClickHandler}>add todo</button>
+                        <input ref={
+                            node => {this.input = node}
+                        }/>
+                        <button onClick={
+                            () => { addTodoClickHandler(this.input) }
+                        }>add todo</button>
                         <ul>
                             {this.props.todos.map(todo => {
                                 return <li key={todo.id}>{todo.text}</li>
