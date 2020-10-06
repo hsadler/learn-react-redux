@@ -1,0 +1,308 @@
+<!doctype html>
+
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    
+    <title>todo app</title>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.0.5/redux.js"></script>
+    <script crossorigin src="https://unpkg.com/react@16/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@16/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <script src="https://wzrd.in/standalone/expect@latest"></script>
+    <script src="https://wzrd.in/standalone/deep-freeze@latest"></script>
+    
+    <meta name="description" content="todo app">
+    <meta name="author" content="hsadler">
+
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="root"></div>
+    <script type="text/babel">
+
+        // Todo App
+
+        /////// REDUCERS ///////
+
+        // single todo sub-reducer of the todos reducer
+        const todo = (state, action) => {
+            if(action.type === 'ADD_TODO') {
+                return {
+                    id: action.id,
+                    text: action.text,
+                    completed: false
+                }
+            } else if(action.type === 'TOGGLE_TODO') {
+                if(state.id === action.id) {
+                    return {
+                        ...state,
+                        completed: !state.completed
+                    };
+                } else {
+                    return state;
+                }
+            } else {
+                return state;
+            }
+        };
+        // top-level todos reducer
+        const todos = (state = [], action) => {
+            if(action.type === 'ADD_TODO') {
+                const newState = [
+                    ...state,
+                    todo(undefined, action)
+                ];
+                return newState;
+            } else if(action.type === 'TOGGLE_TODO') {
+                const newState = state.map(item => {
+                    return todo(item, action);
+                });
+                return newState;
+            } else {
+                return state;
+            }
+        };
+        // top-level visibilityFilter reducer
+        const visibilityFilter = (state="SHOW_ALL", action) => {
+            if(action.type === 'SET_VISIBILITY_FILTER') {
+                return action.filter;
+            } else {
+                return state;
+            }
+        };
+
+        /////// TESTS ///////
+
+        // test functions
+        const testAddTodo = () => {
+            const stateBefore = [];
+            const action = {
+                type: "ADD_TODO",
+                id: 0,
+                text: 'learn redux'
+            };
+            const stateAfter = [
+                {
+                    id: 0,
+                    text: 'learn redux',
+                    completed: false
+                }
+            ];
+            deepFreeze(stateBefore);
+            deepFreeze(action);
+            expect(todos(stateBefore, action)).toEqual(stateAfter);
+        };
+        const testToggleTodo = () => {
+            const stateBefore = [
+                {
+                    id: 0,
+                    text: "Learn Redux",
+                    completed: false
+                },
+                {
+                    id: 1,
+                    text: "Go Shopping",
+                    completed: false
+                }
+            ];
+            const action = {
+                type: 'TOGGLE_TODO',
+                id: 1
+            };
+            const stateAfter = [
+                {
+                    id: 0,
+                    text: "Learn Redux",
+                    completed: false
+                },
+                {
+                    id: 1,
+                    text: "Go Shopping",
+                    completed: true
+                }
+            ];
+            deepFreeze(stateBefore);
+            deepFreeze(action);
+            expect(todos(stateBefore, action)).toEqual(stateAfter);
+        };
+        // run tests
+        testAddTodo();
+        testToggleTodo();
+        console.log("all tests passed.");
+        
+        /////// APP SETUP ///////
+
+        // combine the top-level reducers and create the todoApp function
+        const { combineReducers } = Redux;
+        const todoApp = combineReducers({
+            todos,
+            visibilityFilter
+        });
+
+        // create the store from the todoApp function
+        const { createStore } = Redux;
+        const store = createStore(todoApp);
+
+        // child component definitions
+        const filterLinkClickHandler = (event, filter) => {
+            event.preventDefault();
+            store.dispatch({
+                type: 'SET_VISIBILITY_FILTER',
+                filter: filter
+            });
+        };
+        // NEW: a better way to define functional react component interfaces 
+        // (object key mapping from props arg)
+        const FilterLink = ({currentFilter, filter, filterLinkClickHandler, children}) => {
+            if(currentFilter === filter) {
+                return (
+                    <span>{children}</span>
+                );
+            }
+            return (
+                <a 
+                    href='#'
+                    onClick={e => { filterLinkClickHandler(e, filter) }}
+                >
+                    {children}
+                </a>
+            );
+        };
+        const Todo = ({onClick, todo}) => {
+            return (
+                <li 
+                    onClick={onClick}
+                    style={{
+                        textDecoration: todo.completed ? 'line-through' : 'none'
+                    }}
+                >{todo.text}</li>
+            );
+        };
+        const TodoList = ({todos, todoClickHandler}) => {
+            return (
+                <ul>
+                    {todos.map(todo => {
+                        return (
+                            <Todo
+                                key={todo.id}
+                                todo={todo}
+                                onClick={() => {todoClickHandler(todo)}}
+                            ></Todo>
+                        );
+                    })}
+                </ul>
+            );
+        };
+        const AddTodo = ({ addTodoClickHandler }) => {
+            let input;
+            return (
+                <div>
+                    <input ref={node => {input = node}}/>
+                    <button onClick={
+                        () => { addTodoClickHandler(input) }
+                    }>add todo</button>
+                </div>
+            );
+        };
+        const Footer = ({visibilityFilter, filterLinkClickHandler}) => {
+            return (
+                <p>
+                    Show:
+                    {' '}
+                    <FilterLink 
+                        filter='SHOW_ALL' 
+                        currentFilter={visibilityFilter}
+                        filterLinkClickHandler={filterLinkClickHandler}
+                    >All</FilterLink>
+                    {' '}
+                    <FilterLink 
+                        filter='SHOW_ACTIVE' 
+                        currentFilter={visibilityFilter}
+                        filterLinkClickHandler={filterLinkClickHandler}
+                    >Active</FilterLink>
+                    {' '}
+                    <FilterLink 
+                        filter='SHOW_COMPLETED' 
+                        currentFilter={visibilityFilter}
+                        filterLinkClickHandler={filterLinkClickHandler}
+                    >Completed</FilterLink>
+                </p>
+            );
+        };
+
+        // create top-level todo-app react component
+        const { Component } = React;
+        let nextTodoId = 0;
+        const addTodoClickHandler = (input) => {
+            store.dispatch({
+                type: 'ADD_TODO',
+                text: input.value, 
+                id: nextTodoId++
+            });
+            input.value = '';
+        };
+        const toggleTodoClickHandler = (todo) => {
+            store.dispatch({
+                type: 'TOGGLE_TODO',
+                id: todo.id
+            });
+        };
+        const getVisibleTodos = (todos, filter) => {
+            if(filter === 'SHOW_ALL') {
+                return todos;
+            } else if(filter === 'SHOW_ACTIVE') {
+                return todos.filter(t => { return !t.completed });
+            } else if(filter === 'SHOW_COMPLETED') {
+                return todos.filter(t => { return t.completed });
+            }
+        };
+        class TodoApp extends Component {
+            render() {
+                const {
+                    todos,
+                    visibilityFilter
+                } = this.props;
+                const visibleTodos = getVisibleTodos(
+                    todos,
+                    visibilityFilter
+                );
+                // NEW: more react component abstraction
+                return (
+                    <div>
+                        <AddTodo
+                            addTodoClickHandler={addTodoClickHandler}
+                        ></AddTodo>
+                        <TodoList
+                            todos={visibleTodos}
+                            todoClickHandler={toggleTodoClickHandler}
+                        ></TodoList>
+                        <Footer
+                            filterLinkClickHandler={filterLinkClickHandler}
+                        ></Footer>
+                    </div>
+                );
+            }
+        }
+        
+        // connect the todo-app component to the DOM
+        const render = () => {
+            ReactDOM.render(
+                <TodoApp 
+                    todos={store.getState().todos}
+                    visibilityFilter={store.getState().visibilityFilter}
+                />,
+                document.getElementById('root')
+            );
+        };
+
+        // subscribe the render callback on the redux store
+        store.subscribe(render);
+        // call init render
+        render();
+        
+    </script>
+</body>
+</html>
