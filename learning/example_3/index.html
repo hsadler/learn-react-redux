@@ -68,9 +68,7 @@
         };
 
         render();
-        store.subscribe(() => {
-            render();
-        });
+        store.subscribe(render);
         
     </script>
 </body>
